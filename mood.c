@@ -29,6 +29,10 @@ int main(void) {
 
 	int sd;
 	sd = socket(AF_INET6, SOCK_STREAM, 0);	/* PF_INET? */
+	if (sd == -1) {
+		perror("socket error: ");
+		exit(1);
+	}
 
 	struct linger opt;
 	opt.l_onoff = 0;
@@ -38,7 +42,7 @@ int main(void) {
 	struct sockaddr_in6 addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin6_family = AF_INET6;
-	addr.sin6_port = 1024;
+	addr.sin6_port = 4004;
 
 	if (bind(sd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		perror("bind error: ");
