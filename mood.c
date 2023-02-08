@@ -42,7 +42,8 @@ int main(void) {
 	struct sockaddr_in6 addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin6_family = AF_INET6;
-	addr.sin6_port = 4004;
+	addr.sin6_port = htons(4004);
+	addr.sin6_addr = in6addr_any;
 
 	if (bind(sd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		perror("bind error: ");
