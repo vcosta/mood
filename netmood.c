@@ -15,24 +15,13 @@
 
 #define MAX_EPOLL_EVENTS 10
 
-const char *info[] = {
-	"you are fleeing blue\n",
-	"you are down in the dumps\n",
-	"it is raining outside\n"
-};
 
 void doit(int conn_sock) {
 	char buf[MAX_BUFFER];
-	size_t len;
 
-	long mood;
+	long mood = (random() % 3);
 
-	mood = (random() % 3);
-	len = snprintf(buf, MAX_BUFFER, "you mood is: %s\n", ((mood == 0) ? "fucked" : ((mood == 1) ? "screwed" : "okayish")));
-	send(conn_sock, buf, len, 0);
-
-	mood = (random() % 3);
-	len = snprintf(buf, MAX_BUFFER, "%s", info[mood]);
+	size_t len = snprintf(buf, MAX_BUFFER, "you mood is: %s\n", ((mood == 0) ? "fucked" : ((mood == 1) ? "screwed" : "okayish")));
 	send(conn_sock, buf, len, 0);
 }
 
