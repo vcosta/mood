@@ -12,7 +12,7 @@ void loop(void) {
 	long mood = (random() % 3);
 
 	size_t len = snprintf(buf, MAX_BUFFER, "you mood is: %s\n", ((mood == 0) ? "fucked" : ((mood == 1) ? "screwed" : "okayish")));
-	puts(buf);
+	fputs(buf, stdout);
 }
 
 int main(void) {
