@@ -4,19 +4,25 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
+
+#include <sys/epoll.h>
+
 
 #define MAX_RNG_STATE 256
 
 #define MAX_BUFFER 128
 
+#define MAX_EPOLL_EVENTS 10
 
-void loop(void) {
+
+void doit(int conn_sock) {
 	char buf[MAX_BUFFER];
 
 	long mood = (random() % 3);
 
 	size_t len = snprintf(buf, MAX_BUFFER, "you mood is: %s\n", ((mood == 0) ? "fucked" : ((mood == 1) ? "screwed" : "okayish")));
-	fputs(buf, stdout);
+	send(conn_sock, buf, len, 0);
 }
 
 int main(void) {
@@ -35,7 +41,7 @@ int main(void) {
 	}
 
 	struct linger opt;
-	opt.l_onoff = 0;
+	opt.l_onoff = 1;
 	opt.l_linger = 0;
 	setsockopt(sd, SOL_SOCKET, SO_LINGER, &opt, sizeof(opt));
 
@@ -52,10 +58,19 @@ int main(void) {
 
 	listen(sd, 10);
 
-	/* epoll(); - Linux only */
-	
 	for (;;) {
-		loop();
+		struct sockaddr_in6 conn_addr;
+		socklen_t conn_addrlen;
+		int conn_sock;
+
+		conn_sock = accept(sd, (struct sockaddr *) &conn_addr, &conn_addrlen);
+		if (conn_sock == -1) {
+			perror("accept error: ");
+			exit(1);
+		}
+
+		doit(conn_sock);
+		close(conn_sock);
 	}
 
 	return 0;
