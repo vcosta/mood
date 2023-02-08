@@ -48,6 +48,10 @@ int main(void) {
 		perror("bind error: ");
 		exit(1);
 	}
+
+	listen(sd, 10);
+
+	/* epoll(); - Linux only */
 	
 	for (;;) {
 		loop();
