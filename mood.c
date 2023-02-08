@@ -3,11 +3,16 @@
 
 #define MAX_STATE 256
 
+#define MAX_BUFFER 128
+
 
 void loop(void) {
+	char buf[MAX_BUFFER];
+
 	long mood = (random() % 3);
 
-	printf("you mood is: %s\n", ((mood == 0) ? "fucked" : ((mood == 1) ? "screwed" : "okayish")));
+	size_t len = snprintf(buf, MAX_BUFFER, "you mood is: %s\n", ((mood == 0) ? "fucked" : ((mood == 1) ? "screwed" : "okayish")));
+	puts(buf);
 }
 
 int main(void) {
