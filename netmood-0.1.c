@@ -6,14 +6,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include <sys/epoll.h>
+/* #include <sys/epoll.h> */
 
 
 #define MAX_RNG_STATE 256
 
 #define MAX_BUFFER 128
 
-#define MAX_EPOLL_EVENTS 10
+/* #define MAX_EPOLL_EVENTS 10 */
 
 
 void doit(int conn_sock) {
