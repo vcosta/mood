@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 /* #include <sys/epoll.h> */
+#include <signal.h>
 
 
 #define MAX_RNG_STATE 256
@@ -50,19 +52,24 @@ void defrag(void) {
 	printf("defrag: %d left out of %d\n", used_conns, max_conns);
 }
 
-void doit(int conn_sock) {
+bool doit(int conn_sock) {
 	char buf[MAX_BUFFER];
 	size_t len;
+	ssize_t ret;
 
 	long mood;
 
 	mood = (random() % 3);
 	len = snprintf(buf, MAX_BUFFER, "%s", moods[mood]);
-	send(conn_sock, buf, len, 0);
+	ret = send(conn_sock, buf, len, 0);
+	if (ret <= 0) return false;
 
 	mood = (random() % 3);
 	len = snprintf(buf, MAX_BUFFER, "%s", infos[mood]);
-	send(conn_sock, buf, len, 0);
+	ret = send(conn_sock, buf, len, 0);
+	if (ret <= 0) return false;
+
+	return true;
 }
 
 int main(void) {
@@ -72,6 +79,8 @@ int main(void) {
 
 	initstate(seed, state, MAX_RNG_STATE);
 	setstate(state);
+
+	signal(SIGPIPE, SIG_IGN);
 
 	int sd;
 	sd = socket(AF_INET6, SOCK_STREAM, 0);	/* PF_INET? */
@@ -140,19 +149,20 @@ int main(void) {
 			max_conns++;
 		}
 
-		for (int i = 0; i < used_conns; i++) {
+		for (int i = 0; i < max_conns; i++) {
 			const int conn_sock = conns[i];
 			if (FD_ISSET(conn_sock, &exc_set)) {
 				close(conn_sock);
-				used_conns--;
 				conns[i] = -1;
+				used_conns--;
 			}
 
 			if (FD_ISSET(conn_sock, &out_set)) {
-				doit(conn_sock);
-				close(conn_sock);
-				used_conns--;
-				conns[i] = -1;
+				if (!doit(conn_sock)) {
+					close(conn_sock);
+					conns[i] = -1;
+					used_conns--;
+				}
 			}
 		}
 
