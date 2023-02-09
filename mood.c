@@ -30,8 +30,25 @@ const char *infos[] = {
 };
 
 
-static int max_conns;
+static int max_conns, used_conns;
 static int *conns;
+
+
+void defrag(void) {
+	int j = -1;
+	for (int i = 0; i < max_conns; i++) {
+		if (conns[i] == -1)
+			j = i;
+		else if (j != -1) {
+			conns[j] = conns[i];
+			j = -1;
+		}
+	}
+	conns = realloc(conns, used_conns * sizeof(*conns));
+	max_conns = used_conns;
+
+	printf("defrag: %d left out of %d\n", used_conns, max_conns);
+}
 
 void doit(int conn_sock) {
 	char buf[MAX_BUFFER];
@@ -81,7 +98,7 @@ int main(void) {
 
 	listen(sd, 10);
 
-	max_conns = 0;
+	max_conns = used_conns = 0;
 	conns = NULL;
 
 	for (;;) {
@@ -96,7 +113,7 @@ int main(void) {
 		FD_SET(sd, &exc_set);
 
 		max_desc = sd;
-		for (int i = 0; i < max_conns; i++) {
+		for (int i = 0; i < used_conns; i++) {
 			const int conn_sock = conns[i];
 			if (conn_sock != -1) {
 				FD_SET(conn_sock, &out_set);
@@ -117,28 +134,29 @@ int main(void) {
 				perror("accept error: ");
 				exit(1);
 			}
-			conns = realloc(conns, (max_conns+1) * sizeof(*conns));
-			conns[max_conns] = conn_sock;
+			conns = realloc(conns, (used_conns+1) * sizeof(*conns));
+			conns[used_conns] = conn_sock;
+			used_conns++;
 			max_conns++;
 		}
 
-		for (int i = 0; i < max_conns; i++) {
+		for (int i = 0; i < used_conns; i++) {
 			const int conn_sock = conns[i];
 			if (FD_ISSET(conn_sock, &exc_set)) {
 				close(conn_sock);
-				max_conns--;
+				used_conns--;
 				conns[i] = -1;
 			}
 
 			if (FD_ISSET(conn_sock, &out_set)) {
 				doit(conn_sock);
 				close(conn_sock);
-				max_conns--;
+				used_conns--;
 				conns[i] = -1;
 			}
 		}
 
-		/* DEFRAG conns */
+		defrag();
 	}
 
 	return 0;
