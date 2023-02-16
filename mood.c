@@ -48,8 +48,8 @@ void defrag(void) {
 	}
 	conns = realloc(conns, used_conns * sizeof(*conns));
 	max_conns = used_conns;
-
-	printf("defrag: %d left out of %d\n", used_conns, max_conns);
+/*
+	fprintf(stderr, "defrag: %d left out of %d\n", used_conns, max_conns);*/
 }
 
 bool doit(int conn_sock) {
