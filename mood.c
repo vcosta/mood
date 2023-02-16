@@ -162,9 +162,14 @@ int main(void) {
 			}
 
 			if (FD_ISSET(conn_sock, &in_set)) {
-				char ibuffer[82];
-				recv(conn_sock, ibuffer, sizeof(ibuffer), 0);
-				printf("Received: '%s'", ibuffer);
+				char ibuffer[83];
+				size_t len;
+
+				len = recv(conn_sock, ibuffer, sizeof(ibuffer)-1, 0);
+				if (len != -1) {
+					printf("Received: '%s'", ibuffer);
+					ibuffer[len] = '\0';
+				}
 			}
 
 			if (FD_ISSET(conn_sock, &out_set)) {
