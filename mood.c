@@ -20,15 +20,15 @@
 
 
 const char *moods[] = {
-	"your mood is: fucked\n",
-	"your mood is: screwed\n",
-	"your mood is: okayish\n"
+	"your mood is: fucked\r\n",
+	"your mood is: screwed\r\n",
+	"your mood is: okayish\r\n"
 };
 
 const char *infos[] = {
-	"you are fleeing kinda blue\n",
-	"you are down in the dumps\n",
-	"it is raining outside\n"
+	"you are fleeing kinda blue\r\n",
+	"you are down in the dumps\r\n",
+	"it is raining outside\r\n"
 };
 
 
@@ -68,6 +68,8 @@ bool doit(int conn_sock) {
 	len = snprintf(buf, MAX_BUFFER, "%s", infos[mood]);
 	ret = send(conn_sock, buf, len, 0);
 	if (ret <= 0) return false;
+
+	sleep(2);
 
 	return true;
 }
@@ -125,6 +127,7 @@ int main(void) {
 		for (int i = 0; i < used_conns; i++) {
 			const int conn_sock = conns[i];
 			if (conn_sock != -1) {
+				FD_SET(conn_sock, &in_set);
 				FD_SET(conn_sock, &out_set);
 				FD_SET(conn_sock, &exc_set);
 				max_desc = MAX(max_desc, conn_sock);
@@ -155,6 +158,13 @@ int main(void) {
 				close(conn_sock);
 				conns[i] = -1;
 				used_conns--;
+				continue;
+			}
+
+			if (FD_ISSET(conn_sock, &in_set)) {
+				char ibuffer[82];
+				recv(conn_sock, ibuffer, sizeof(ibuffer), 0);
+				printf("Received: '%s'", ibuffer);
 			}
 
 			if (FD_ISSET(conn_sock, &out_set)) {
